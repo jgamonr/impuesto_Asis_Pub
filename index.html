@@ -1,186 +1,150 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-
-
-<title>Calculadora de Boletos Moderna</title>
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 20px;
-    background-color: #f4f4f4;
-  }
-
-  .contenedor {
-    background-color: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-
-  td.totalFila {
-    text-align: right; /* Alineación a la derecha para la columna Total */
-  }
-
-  th {
-    background-color: #800033;
-    color: white;
-  }
-
-  button {
-    background-color: #800033;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px; /* Espacio adicional arriba del botón */
-  }
-
-  button:hover {
-    opacity: 0.8;
-  }
-
-  .resultado, .encabezado {
-    margin-top: 20px;
-    padding: 10px;
-    background-color: #e6e6e6;
-    border-radius: 8px;
-  }
-
-  label {
-    margin-right: 10px;
-  }
-
-  input[type="number"], input[type="text"] {
-    padding: 5px;
-    margin: 2px 0; /* Ajusta según sea necesario */
-    width: calc(100% - 10px); /* Ajusta el ancho para evitar desbordamiento */
-  }
-
-  .totalFila, #totalGeneral, #impuesto, #honorarios, #totalFinal {
-    font-weight: bold;
-  }
-</style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.3.1/jspdf.umd.min.js"></script>
-<script>
-let indiceFila = 0; // Contador de filas para el índice
-
-function formatearMoneda(numero) {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(numero);
-}
-
-function inicializar() {
-    document.getElementById('agregarFila').addEventListener('click', agregarFila);
-    document.getElementById('guardarPDF').addEventListener('click', guardarPDF);
-    actualizarTotales();
-}
-
-function agregarFila() {
-    indiceFila++; // Incrementa el índice cada vez que se agrega una fila
-    const tabla = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0];
-    const fila = tabla.insertRow();
-    fila.innerHTML = `
-        <td>${indiceFila}</td>
-        <td><input type="number" value="1" min="1" onchange="calcularFila(this);"></td>
-        <td><input type="text"></td>
-        <td><input type="number" value="0" min="0" onchange="calcularFila(this);"></td>
-        <td class="totalFila">0</td>`;
-    calcularFila(fila.cells[1].children[0]);
-}
-
-function calcularFila(element) {
-    const fila = element.closest('tr');
-    const cantidad = parseInt(fila.cells[1].children[0].value) || 0;
-    const precio = parseFloat(fila.cells[3].children[0].value) || 0;
-    const total = cantidad * precio;
-    fila.cells[4].innerText = formatearMoneda(total);
-    actualizarTotales();
-}
-
-function actualizarTotales() {
-    const filas = document.querySelectorAll('#tablaBoletos tbody tr');
-    let totalCantidad = 0, totalGeneral = 0;
-    filas.forEach(fila => {
-        totalCantidad += parseInt(fila.cells[1].children[0].value) || 0;
-        totalGeneral += parseFloat(fila.cells[4].innerText.replace(/[^0-9.-]+/g,"")) || 0;
-    });
-    document.getElementById('totalCantidad').innerText = totalCantidad;
-    document.getElementById('totalGeneral').innerText = formatearMoneda(totalGeneral);
-    calcularAdicionales(totalGeneral);
-}
-
-function calcularAdicionales(totalGeneral) {
-    const impuesto = totalGeneral * 0.06;
-    document.getElementById('impuesto').innerText = formatearMoneda(impuesto);
-
-    const interventores = parseInt(document.getElementById('interventores').value) || 0;
-    const honorarios = interventores * 1248;
-    document.getElementById('honorarios').innerText = formatearMoneda(honorarios);
-
-    const totalFinal = impuesto + honorarios;
-    document.getElementById('totalFinal').innerText = formatearMoneda(totalFinal);
-}
-
-// Función para guardar la página como PDF
-function guardarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.text("Cálculo de Impuestos V 1.1", 10, 10);
-  doc.save("Calculo_Impuestos.pdf");
-}
-</script>
+    <meta charset="UTF-8">
+    <title>Calculadora de Boletos e Impuestos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #800000; /* Guinda */
+            color: white;
+        }
+        td {
+            background-color: #fff5f5; /* Color claro */
+        }
+        button {
+            background-color: #800000; /* Guinda */
+            color: white;
+            padding: 10px 20px;
+            margin: 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #5a0000; /* Guinda oscuro */
+        }
+        .footer {
+            font-weight: bold;
+        }
+        input, select {
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
 </head>
-<body onload="inicializar();">
+<body>
 
-<div class="contenedor">
-  <div class="encabezado">Cálculo de Impuestos (V 1.1)</div>
-  <table id="tablaBoletos">
-  <thead>
-      <tr>
-          <th>#</th>
-          <th>Cantidad de Boletos</th>
-          <th>Localidad</th>
-          <th>Precio</th>
-          <th>Total</th>
-      </tr>
-  </thead>
-  <tbody>
-  </tbody>
-  <tfoot>
-      <tr>
-          <td colspan="2">Total Cantidad Boletos: <span id="totalCantidad">0</span></td>
-          <td colspan="3">Total General: <span id="totalGeneral">0</span></td>
-      </tr>
-  </tfoot>
-  </table>
-  <button id="agregarFila">Agregar Fila</button>
+<h2>Calculadora de Boletos</h2>
+<table id="tablaBoletos">
+    <thead>
+        <tr>
+            <th>Cantidad de Boletos</th>
+            <th>Localidad</th>
+            <th>Precio Unitario</th>
+            <th>Total (MXN)</th>
+        </tr>
+    </thead>
+    <tbody>
+    </tbody>
+    <tfoot>
+        <tr class="footer">
+            <td id="totalBoletos">0</td>
+            <td>Total y Promedio:</td>
+            <td id="promedioPrecio">$0.00</td>
+            <td id="sumaTotales">$0.00</td>
+        </tr>
+    </tfoot>
+</table>
+<button onclick="agregarFila()">Agregar Fila</button>
 
-  <div class="resultado">
-    <label for="interventores">Interventores:</label>
-    <input type="number" id="interventores" value="0" onchange="actualizarTotales();">
-    <p>Impuesto (6%): <span id="impuesto">0</span></p>
-    <p>Honorarios: <span id="honorarios">0</span></p>
-    <p>Total Final: <span id="totalFinal">0</span></p>
-  </div>
-  
+<h3>Datos Adicionales</h3>
+Número de Interventores: <input type="number" id="numInterventores"><br>
+Honorarios: <input type="number" id="honorarios"><br>
+Porcentaje de Impuesto a cobrar: <input type="number" id="porcentajeImpuesto"><br>
+<button onclick="calcularTotales()">Calcular Totales</button>
+
+<div id="resultados">
+    <h4>Honorarios Totales: <span id="honorariosTotales">$0.00</span></h4>
+    <h4>Impuesto: <span id="impuesto">$0.00</span></h4>
+    <h4>Total a Cobrar: <span id="totalACobrar">$0.00</span></h4>
 </div>
 
+<script>
+    function agregarFila() {
+        const tbody = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0];
+        const row = tbody.insertRow();
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        let cell4 = row.insertCell(3);
+
+        cell1.innerHTML = '<input type="number" value="1" min="1" oninput="calcularFila(this.parentElement.parentElement)">';
+        cell2.innerHTML = '<input type="text">';
+        cell3.innerHTML = '<input type="number" value="0" min="0" oninput="calcularFila(this.parentElement.parentElement)">';
+        cell4.innerHTML = '$0.00';
+
+        calcularFila(row);
+    }
+
+    function calcularFila(row) {
+        let cantidad = row.cells[0].getElementsByTagName('input')[0].value;
+        let precio = row.cells[2].getElementsByTagName('input')[0].value;
+        let total = cantidad * precio;
+        row.cells[3].innerHTML = '$' + total.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+        actualizarTotales();
+    }
+
+    function actualizarTotales() {
+        let totalBoletos = 0;
+        let sumaTotales = 0;
+        let sumaPrecios = 0;
+        const rows = document.getElementById('tablaBoletos').getElementsByTagName('tbody')[0].rows;
+        for (let i = 0; i < rows.length; i++) {
+            totalBoletos += parseInt(rows[i].cells[0].getElementsByTagName('input')[0].value);
+            sumaTotales += parseFloat(rows[i].cells[3].innerHTML.replace(/\$/g, '').replace(/,/g, ''));
+            sumaPrecios += parseFloat(rows[i].cells[2].getElementsByTagName('input')[0].value);
+        }
+        let promedioPrecio = rows.length > 0 ? sumaPrecios / rows.length : 0;
+        document.getElementById('totalBoletos').innerHTML = totalBoletos + ' boletos';
+        document.getElementById('sumaTotales').innerHTML = '$' + sumaTotales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('promedioPrecio').innerHTML = '$' + promedioPrecio.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function calcularTotales() {
+        let numInterventores = document.getElementById('numInterventores').value;
+        let honorarios = document.getElementById('honorarios').value;
+        let porcentajeImpuesto = document.getElementById('porcentajeImpuesto').value / 100;
+        let sumaTotales = parseFloat(document.getElementById('sumaTotales').innerHTML.replace(/\$/g, '').replace(/,/g, ''));
+
+        let honorariosTotales = numInterventores * honorarios;
+        let impuesto = sumaTotales * porcentajeImpuesto;
+        let totalACobrar = honorariosTotales + impuesto;
+
+        document.getElementById('honorariosTotales').innerHTML = '$' + honorariosTotales.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('impuesto').innerHTML = '$' + impuesto.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        document.getElementById('totalACobrar').innerHTML = '$' + totalACobrar.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    // Inicializar con una fila
+    agregarFila();
+</script>
 </body>
 </html>
